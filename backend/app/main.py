@@ -1,7 +1,12 @@
 import asyncio
 import os
-import mimetypes
+import sys
 import subprocess
+import mimetypes
+
+mimetypes.init()
+mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("text/css", ".css")
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,10 +19,6 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal, engine
 from app import models
 
-
-mimetypes.init()
-mimetypes.add_type("application/javascript", ".js")
-mimetypes.add_type("text/css", ".css")
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -32,7 +33,26 @@ app.add_middleware(
 )
 
 
-# ================= DATABASE =================
+# =========================
+# PATH FIX FOR EXE
+# =========================
+
+def get_base_path():
+
+    if getattr(sys, "frozen", False):
+        return sys._MEIPASS
+
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+
+
+BASE_PATH = get_base_path()
+
+FRONTEND_DIST = os.path.join(BASE_PATH, "frontend", "dist")
+
+
+# =========================
+# DATABASE MODELS
+# =========================
 
 class DeviceCreate(BaseModel):
     name: str
@@ -43,12 +63,14 @@ class DeleteMany(BaseModel):
     ids: list[int]
 
 
-# ================= CRUD =================
+# =========================
+# CRUD
+# =========================
 
 @app.post("/devices")
 def add_device(device: DeviceCreate):
 
-    db = SessionLocal()
+    db: Session = SessionLocal()
 
     new_device = models.Device(
         name=device.name,
@@ -67,7 +89,7 @@ def add_device(device: DeviceCreate):
 @app.post("/devices/delete-many")
 def delete_many(payload: DeleteMany):
 
-    db = SessionLocal()
+    db: Session = SessionLocal()
 
     db.query(models.Device).filter(
         models.Device.id.in_(payload.ids)
@@ -79,7 +101,9 @@ def delete_many(payload: DeleteMany):
     return {"deleted": True}
 
 
-# ================= PING FUNCTION =================
+# =========================
+# PING FUNCTION
+# =========================
 
 def ping_ip(ip):
 
@@ -99,13 +123,15 @@ def ping_ip(ip):
         return "offline"
 
 
-# ================= BACKGROUND MONITOR =================
+# =========================
+# BACKGROUND MONITOR
+# =========================
 
 async def monitor_devices():
 
     while True:
 
-        db = SessionLocal()
+        db: Session = SessionLocal()
 
         devices = db.query(models.Device).all()
 
@@ -121,15 +147,15 @@ async def monitor_devices():
         await asyncio.sleep(2)
 
 
-# ================= START BACKGROUND TASK =================
-
 @app.on_event("startup")
 async def startup_event():
 
     asyncio.create_task(monitor_devices())
 
 
-# ================= WEBSOCKET =================
+# =========================
+# WEBSOCKET
+# =========================
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -140,7 +166,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
         while True:
 
-            db = SessionLocal()
+            db: Session = SessionLocal()
 
             devices = db.query(models.Device).all()
 
@@ -167,12 +193,9 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
 
 
-# ================= SERVE REACT BUILD =================
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
-
-FRONTEND_DIST = os.path.join(PROJECT_ROOT, "frontend", "dist")
+# =========================
+# SERVE FRONTEND
+# =========================
 
 app.mount(
     "/assets",

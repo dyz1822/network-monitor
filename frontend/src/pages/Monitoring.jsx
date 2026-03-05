@@ -29,7 +29,7 @@ export default function Monitoring() {
     const addDevice = async () => {
         if (!name || !ip) return;
 
-        await axios.post("http://localhost:8000/devices", {
+        await axios.post("http://localhost:9000/devices", {
             name,
             ip,
         });
@@ -70,7 +70,7 @@ port=5900
     const deleteSelected = async () => {
         if (!selected.length) return;
 
-        await axios.post("http://localhost:8000/devices/delete-many", {
+        await axios.post("http://localhost:9000/devices/delete-many", {
             ids: selected,
         });
 
@@ -79,7 +79,7 @@ port=5900
 
     // ================= REALTIME WS =================
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8000/ws");
+        const ws = new WebSocket(`ws://${window.location.host}/ws`);
 
         ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
