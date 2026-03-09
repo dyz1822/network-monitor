@@ -3,28 +3,5 @@
 @tailwind utilities;
 
 body {
-  @apply transition-colors duration-300;
-}
-
-/* ================= OFFLINE ALERT ANIMATION ================= */
-
-@keyframes offlineBlink {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.25;
-    transform: scale(1.25);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.offline-alert {
-  animation: offlineBlink 1s infinite ease-in-out;
+  margin: 0;
 }

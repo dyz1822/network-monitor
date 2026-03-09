@@ -1,20 +1,20 @@
 # Python
-venv/
 __pycache__/
 *.pyc
-
-# Database
-*.db
+*.pyo
+venv/
+.env
 
 # Node
 node_modules/
+frontend/node_modules/
 
-# React build
-frontend/dist/
+# Build output (opsional, skip kalau mau upload hasil build)
+# frontend/dist/
 
-# Environment
-.env
+# Database
+*.db
+*.sqlite
 
-# OS
-.DS_Store
-Thumbs.db
+# Log
+*.log
